@@ -16,11 +16,12 @@ class GregBot(gym.Env):
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(self.model.nq + self.model.nv,), dtype=np.float32)
 
         # Define the goal position (initially set to (1.0, 1.0))
-        self.goal_position = np.array([1.0, 1.0])
+        self.goal_position = [1.0, 1.0]
+        # self.set_goal_coord(self.goal_position[0], self.goal_position[1])
 
     def reset(self):
         self.sim.reset()
-        self._randomize_spawn()
+        self.randomize_spawn()
 
     def step(self, action):
         # Take a step in the environment based on the given action
@@ -57,8 +58,12 @@ class GregBot(gym.Env):
         return np.array([x,y])
     
     def set_goal_coord(self, x, y):
-        goal_pos_addr = self.model.get_joint_qpos_addr("goal")
-        self.sim.data.qpos[goal_pos_addr] = np.array([x,y])
+        self.goal_position = [x, y]
+
+        goal_pos_addr = self.sim.data.get_body_qpos_addr("goal")
+
+        self.sim.data.qpos[goal_pos_addr] = x
+        self.sim.data.qpos[goal_pos_addr+1] = y
     
     def get_car_coord(self):
         x = self.sim.data.get_body_xpos("car")
@@ -81,9 +86,7 @@ class GregBot(gym.Env):
         self.sim.step
 
 
-
-
-    def _randomize_spawn(self):
+    def randomize_spawn(self):
         # Randomize the spawn location of the bot and the goal point
         # You can adjust the ranges based on your desired spawn locations
         bot_spawn = np.random.uniform(low=-1.0, high=1.0, size=(2,))
